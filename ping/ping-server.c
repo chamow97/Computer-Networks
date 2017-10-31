@@ -1,49 +1,55 @@
-//UDP echo server
+//ping
+//time between message
 /*-------------------------------------------------------*/
 
-#include<stdio.h>
 #include<sys/types.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
+#include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
 
 /*-------------------------------------------------------*/
-
 int main(int argc, char **argv)
 {
 	socklen_t len;
-	int sockFd, connectionFd, n;
-
 	struct sockaddr_in serverAddress, clientAddress;
-
-	char buffer[1000];
-
-	printf("\n\n\t\t\t UDP ECHO Server\n\t\t\t --- ---- ------");
+	int length, sockFd, connFd;
+	char buffer[1000]; 
+	int ptr = 0;
+	
 	/*-------------------------------------------------------*/
-
-	sockFd = socket(AF_INET, SOCK_DGRAM, 0);
-
-	//if not created
+	printf("\n\n\t\t\t PING - SERVER\n\t\t\t ----   ------");
+	sockFd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sockFd < 0)
 	{
-		perror("\n\t\t Cannot create socket!");
+		perror("\n\n\t\t Socket Error!");
 		return 0;
 	}
-	//initialisation
 	bzero(&serverAddress, sizeof(serverAddress));
-
 	serverAddress.sin_family = AF_INET;
 	serverAddress.sin_addr.s_addr = INADDR_ANY;
 	serverAddress.sin_port = htons(5000);
-
-	//binding the socket
 	bind(sockFd, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
+	listen(sockFd, 0);
 	len = sizeof(clientAddress);
-	//echo
-	recvfrom(sockFd, buffer, sizeof(buffer), 0, (struct sockaddr *)&clientAddress, &len);
-	printf("\n\n\t\t Client: %s\n", buffer);
+	connFd = accept(sockFd, (struct sockaddr *)&clientAddress, &len);
+	if(connFd<0)
+	{
+		perror("connection error\n");
+		return 0;
+	}
+	while(ptr < 10)
+	{
+		ptr++;
+		read(connFd, buffer, sizeof(buffer));
+		printf("\n\t\t Client Pings - %d", ptr);
+		write(connFd, buffer, sizeof(buffer));
+		
+	}
+
+	close(connFd);
 	close(sockFd);
-	
 	return 0;
 }
+	
